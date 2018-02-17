@@ -1,10 +1,3 @@
-/* ****************************** *
- * Titanium_CPA_lite              *
- * Implemented by Raymond K. ZHAO *
- *                                *
- * Wrapper of KMAC256 PRG         *
- * ****************************** */
- 
 #include "fastrandombytes.h"
 #include "keccak.h"
 #include "param.h"
@@ -13,8 +6,8 @@
 
 #define IV_SIZE 4 /* 32-bit IV */
 
-unsigned char key[CRYPTO_RANDOMBYTES];
-unsigned char iv[IV_SIZE];
+static unsigned char key[CRYPTO_RANDOMBYTES];
+static unsigned char iv[IV_SIZE];
 
 /* r <-- KMAC256(key, iv, rlen)
  * iv++ */
