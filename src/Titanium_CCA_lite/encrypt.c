@@ -161,7 +161,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	
 	for (i = 0; i < D; i++)
 	{
-		c2[i] = c2[i] + mu[i]; /* will be reduced by encoding */
+		c2[i] = barrett_4q(c2[i] + mu[i]);
 	}
 	
 	/* encode c <-- (c1,c2) */
