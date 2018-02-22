@@ -127,7 +127,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 /* return (x >= y) */
 static inline int ct_ge_u32(uint32_t x, uint32_t y)
 {
-    return 1 ^ ((x^((x^y)|((x-y)^y)))>>31);
+    return 1 ^ ((x - y) >> 31);
 }
 
 /* Sample slen uniforms in Z_q 
