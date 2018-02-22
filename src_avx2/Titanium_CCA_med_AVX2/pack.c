@@ -10,6 +10,11 @@
 #include "littleendian.h"
 #include <stdint.h>
 
+static inline uint32_t con_sub(uint32_t x) /* conditional subtraction of q */
+{
+	return x - (1 ^ ((x - Q) >> 31)) * Q;
+}
+
 /* convert a polynomial to a binary string */
 void poly_encode(unsigned char *b, const uint64_t *p, uint32_t len)
 {
@@ -21,14 +26,14 @@ void poly_encode(unsigned char *b, const uint64_t *p, uint32_t len)
 	for (i = 0; i < len; i += 8)
 	{
 		/* make sure each coordinate is smaller than Q */
-		pp[0] = p[i] % Q;
-		pp[1] = p[i + 1] % Q;
-		pp[2] = p[i + 2] % Q;
-		pp[3] = p[i + 3] % Q;
-		pp[4] = p[i + 4] % Q;
-		pp[5] = p[i + 5] % Q;
-		pp[6] = p[i + 6] % Q;
-		pp[7] = p[i + 7] % Q;
+		pp[0] = con_sub(p[i]);
+		pp[1] = con_sub(p[i + 1]);
+		pp[2] = con_sub(p[i + 2]);
+		pp[3] = con_sub(p[i + 3]);
+		pp[4] = con_sub(p[i + 4]);
+		pp[5] = con_sub(p[i + 5]);
+		pp[6] = con_sub(p[i + 6]);
+		pp[7] = con_sub(p[i + 7]);
 		
 		bb = b + (i / 8) * Q_BITS;
 		bb[0] = pp[0];
@@ -83,7 +88,7 @@ void poly_encode_c2(unsigned char *b, const uint64_t *p, uint32_t len)
 	for (i = 0; i < len; i++)
 	{
 		/* each coordinate will become 1 bytes after compression */
-		STORE_C2(b + i * C2_COMPRESSION_BYTE, (p[i] % Q) >> C2_COMPRESSION_BITS);
+		STORE_C2(b + i * C2_COMPRESSION_BYTE, (con_sub(p[i])) >> C2_COMPRESSION_BITS);
 	}
 }
 

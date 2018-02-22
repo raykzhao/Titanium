@@ -114,7 +114,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	uint64_t c1[N + K1 + 1];
 	uint64_t c2[D + K1 + 1];
 	uint32_t i, j;
-	__m256i u, v, t;
+	__m256i u, v, t, t1;
 	
 	/* reconstruct a_i by the seed saved in pk */
 	fastrandombytes_setseed(pk);
@@ -204,6 +204,10 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 		u = _mm256_loadu_si256((__m256i *)(c2 + i));
 		v = _mm256_loadu_si256((__m256i *)(mu + i));
 		t = _mm256_add_epi64(u, v);
+		t1 = _mm256_mul_epu32(t, V_B4Q_B4Q_B4Q_B4Q);
+		t1 = _mm256_srli_epi64(t1, BARRETT_BITSHIFT_4Q);
+		t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
+		t = _mm256_sub_epi64(t, t1);
 		_mm256_storeu_si256((__m256i *)(c2 + i), t);
 	}
 	
