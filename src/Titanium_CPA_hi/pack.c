@@ -12,6 +12,11 @@
 
 #define Q_BITS_PACK 5 /* pack/unpack each 5 bytes */
 
+static inline uint32_t con_sub(uint32_t x) /* conditional subtraction of q */
+{
+	return x - (1 ^ ((x - Q) >> 31)) * Q;
+}
+
 /* convert a polynomial to a binary string */
 void poly_encode(unsigned char *b, const uint32_t *p, uint32_t len)
 {
@@ -23,8 +28,8 @@ void poly_encode(unsigned char *b, const uint32_t *p, uint32_t len)
 	for (i = 0; i < len; i += 2)
 	{
 		/* make sure each coordinate is smaller than Q */
-		pp[0] = p[i] % Q;
-		pp[1] = p[i + 1] % Q;
+		pp[0] = con_sub(p[i]);
+		pp[1] = con_sub(p[i + 1]);
 		
 		bb = b + (i / 2) * Q_BITS_PACK;
 		bb[0] = pp[0];
@@ -59,7 +64,7 @@ void poly_encode_c2(unsigned char *b, const uint32_t *p, uint32_t len)
 	for (i = 0; i < len; i++)
 	{
 		/* each coordinate will become 1 bytes after compression */
-		STORE_C2(b + i * C2_COMPRESSION_BYTE, (p[i] % Q) >> C2_COMPRESSION_BITS);
+		STORE_C2(b + i * C2_COMPRESSION_BYTE, (con_sub(p[i])) >> C2_COMPRESSION_BITS);
 	}
 }
 
