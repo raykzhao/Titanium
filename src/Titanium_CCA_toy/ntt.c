@@ -333,10 +333,10 @@ static void ntt_butterfly_768_1280(uint32_t *a, uint32_t n2)
 	d = a[N2_1280 * 2 + n2];
 	
 	a[n2] = barrett_8q(b + c + d);
-	a[N2_1280 + n2] = barrett_4q(b + barrett_4q2(c * w_5[0][0] + d * w_5[0][1]));
-	a[N2_1280 * 2 + n2] = barrett_4q(b + barrett_4q2(c * w_5[1][0] + d * w_5[1][1]));
-	a[N2_1280 * 3 + n2] = barrett_4q(b + barrett_4q2(c * w_5[2][0] + d * w_5[2][1]));
-	a[N2_1280 * 4 + n2] = barrett_4q(b + barrett_4q2(c * w_5[3][0] + d * w_5[3][1]));
+	a[N2_1280 + n2] = barrett_4q2(b + c * w_5[0][0] + d * w_5[0][1]);
+	a[N2_1280 * 2 + n2] = barrett_4q2(b + c * w_5[1][0] + d * w_5[1][1]);
+	a[N2_1280 * 3 + n2] = barrett_4q2(b + c * w_5[2][0] + d * w_5[2][1]);
+	a[N2_1280 * 4 + n2] = barrett_4q2(b + c * w_5[3][0] + d * w_5[3][1]);
 }
 
 /* 256 * 5 --> 256 * 2 */
@@ -351,7 +351,7 @@ static void ntt_butterfly_1280_512(uint32_t *a, uint32_t n2)
 	f = a[N2_1280 * 4 + n2];
 	
 	a[n2] = barrett_16q(b + c + d + e + f);
-	a[N2_1280 + n2] = barrett_8q(b + barrett_4q2(c * w_5[0][0] + d * w_5[0][1]) + barrett_4q2(e * w_5[0][2] + f * w_5[0][3]));
+	a[N2_1280 + n2] = barrett_8q2(b + c * w_5[0][0] + d * w_5[0][1] + e * w_5[0][2] + f * w_5[0][3]);
 }
 
 /* 256 * 1 --> 256 * 4 */
@@ -372,9 +372,9 @@ static void ntt_butterfly_768_1024(uint32_t *a, uint32_t n2)
 	d = a[N2_1024 * 2 + n2];
 	
 	a[n2] = barrett_8q(b + c + d);
-	a[N2_1024 + n2] = barrett_4q(b + barrett_4q2(c * w_4[0][0] + d * w_4[0][1]));
-	a[N2_1024 * 2 + n2] = barrett_4q(b + barrett_4q2(c * w_4[1][0] + d * w_4[1][1]));
-	a[N2_1024 * 3 + n2] = barrett_4q(b + barrett_4q2(c * w_4[2][0] + d * w_4[2][1]));
+	a[N2_1024 + n2] = barrett_4q2(b + c * w_4[0][0] + d * w_4[0][1]);
+	a[N2_1024 * 2 + n2] = barrett_4q2(b + c * w_4[1][0] + d * w_4[1][1]);
+	a[N2_1024 * 3 + n2] = barrett_4q2(b + c * w_4[2][0] + d * w_4[2][1]);
 }
 
 /* 256 * 4 --> 256 * 4 */
@@ -388,9 +388,9 @@ static void ntt_butterfly_1024_1024_inv(uint32_t *a, uint32_t n2)
 	e = a[N2_1024 * 3 + n2];
 	
 	a[n2] = barrett_8q(b + c + d + e);
-	a[N2_1024 + n2] = barrett_2q2(b + barrett_4q2(c * w_4_inv[0][0] + d * w_4_inv[0][1]) + e * w_4_inv[0][2]);
-	a[N2_1024 * 2 + n2] = barrett_2q2(b + barrett_4q2(c * w_4_inv[1][0] + d * w_4_inv[1][1]) + e * w_4_inv[1][2]);
-	a[N2_1024 * 3 + n2] = barrett_2q2(b + barrett_4q2(c * w_4_inv[2][0] + d * w_4_inv[2][1]) + e * w_4_inv[2][2]);
+	a[N2_1024 + n2] = barrett_8q2(b + c * w_4_inv[0][0] + d * w_4_inv[0][1] + e * w_4_inv[0][2]);
+	a[N2_1024 * 2 + n2] = barrett_8q2(b + c * w_4_inv[1][0] + d * w_4_inv[1][1] + e * w_4_inv[1][2]);
+	a[N2_1024 * 3 + n2] = barrett_8q2(b + c * w_4_inv[2][0] + d * w_4_inv[2][1] + e * w_4_inv[2][2]);
 }
 
 /* 256 * 2 --> 256 * 2 */
@@ -422,10 +422,10 @@ static void ntt_butterfly_1024_1280(uint32_t *a, uint32_t n2)
 	e = a[N2_1280 * 3 + n2];
 	
 	a[n2] = barrett_8q(b + c + d + e);
-	a[N2_1280 + n2] = barrett_2q2(b + barrett_4q2(c * w_5[0][0] + d * w_5[0][1]) + e * w_5[0][2]);
-	a[N2_1280 * 2 + n2] = barrett_2q2(b + barrett_4q2(c * w_5[1][0] + d * w_5[1][1]) + e * w_5[1][2]);
-	a[N2_1280 * 3 + n2] = barrett_2q2(b + barrett_4q2(c * w_5[2][0] + d * w_5[2][1]) + e * w_5[2][2]);
-	a[N2_1280 * 4 + n2] = barrett_2q2(b + barrett_4q2(c * w_5[3][0] + d * w_5[3][1]) + e * w_5[3][2]);
+	a[N2_1280 + n2] = barrett_8q2(b + c * w_5[0][0] + d * w_5[0][1] + e * w_5[0][2]);
+	a[N2_1280 * 2 + n2] = barrett_8q2(b + c * w_5[1][0] + d * w_5[1][1] + e * w_5[1][2]);
+	a[N2_1280 * 3 + n2] = barrett_8q2(b + c * w_5[2][0] + d * w_5[2][1] + e * w_5[2][2]);
+	a[N2_1280 * 4 + n2] = barrett_8q2(b + c * w_5[3][0] + d * w_5[3][1] + e * w_5[3][2]);
 }
 
 /* 256 * 5 --> 256 * 1 */

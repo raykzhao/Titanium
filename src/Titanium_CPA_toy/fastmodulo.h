@@ -24,6 +24,8 @@
 
 #define BARRETT_BITSHIFT_2Q2 37 
 #define BARRETT_BITSHIFT_4Q2 38 
+#define BARRETT_BITSHIFT_8Q2 39 
+#define BARRETT_BITSHIFT_16Q2 40 
 
 #define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
 
@@ -33,6 +35,8 @@
 
 #define BARRETT_FACTOR_2Q2 571136
 #define BARRETT_FACTOR_4Q2 1142273
+#define BARRETT_FACTOR_8Q2 2284547
+#define BARRETT_FACTOR_16Q2 4569095
 
 #define BARRETT_FACTOR_ZQ 69
 
@@ -59,6 +63,16 @@ inline uint32_t barrett_2q2(uint64_t t)
 inline uint32_t barrett_4q2(uint64_t t)
 {
 	return t - (((t * BARRETT_FACTOR_4Q2) >> BARRETT_BITSHIFT_4Q2) * Q);
+}
+
+inline uint32_t barrett_8q2(uint64_t t)
+{
+	return t - (((t * BARRETT_FACTOR_8Q2) >> BARRETT_BITSHIFT_8Q2) * Q);
+}
+
+inline uint32_t barrett_16q2(uint64_t t)
+{
+	return t - (((t * BARRETT_FACTOR_16Q2) >> BARRETT_BITSHIFT_16Q2) * Q);
 }
 
 inline uint32_t barrett_zq(uint32_t t)
