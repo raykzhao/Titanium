@@ -16,6 +16,11 @@
 #include <string.h>
 #include <stdint.h>
 
+static inline uint32_t con_sub(uint32_t x) /* conditional subtraction of q */
+{
+	return x - (1 ^ ((x - Q) >> 31)) * Q;
+}
+
 int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk, const unsigned char *randomness)
 {
 	uint32_t s[N + D + K + 1];
@@ -44,7 +49,13 @@ int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk, const unsigned 
 	 * generate two more samples, which wouldn't affect the result of middle-product a_i mp_{d+k} s
 	 * (can save the adjustment of s to make the most significant bits of lambda_s be 0) */
 	sampler_zq(s, N + D + K + 1, ZQ_BYTPCS);
-	
+
+	/* reduce s to [0,q-1] */
+	for (i = 0; i < N + D + K + 1; i++)
+	{
+		s[i] = con_sub(s[i]);
+	}
+		
 	sampler_binomial(e); /* sample e_i <-- lambda_e over Z_q^{<d+k}[x] */
 	
 	for (i = 0; i < T; i++)
@@ -52,7 +63,7 @@ int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk, const unsigned 
 		/* a_i <-- a_i mp_{d+k} s */
 		for (j = 0; j < N + D + K + 1; j++)
 		{
-			a[i][j] = ((uint64_t)a[i][j] * (uint64_t)s[j]) % Q;
+			a[i][j] = barrett_2q2((uint64_t)a[i][j] * (uint64_t)s[j]);
 		}
 		
 		INTT_NDK_DK(a[i]);
@@ -137,7 +148,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	{
 		for (j = 0; j < N + K + 1; j++)
 		{
-			c1[j] = ((uint64_t)c1[j] + (uint64_t)r[i][j] * (uint64_t)a[i][j]) % Q;
+			c1[j] = barrett_2q2((uint64_t)c1[j] + (uint64_t)(con_sub(r[i][j])) * (uint64_t)a[i][j]);
 		}
 	}
 		
@@ -147,7 +158,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	{
 		for (j = 0; j < D + K + 1; j++)
 		{
-			c2[j] = ((uint64_t)c2[j] + (uint64_t)r2[i][j] * (uint64_t)b[i][j]) % Q;
+			c2[j] = barrett_2q2((uint64_t)c2[j] + (uint64_t)r2[i][j] * (uint64_t)b[i][j]); /* b(i,j) is already in [0,q-1] */
 		}
 	}
 	
@@ -191,7 +202,7 @@ int crypto_encrypt_open(unsigned char *m, unsigned long long *mlen, const unsign
 	
 	for (i = 0; i < N + D + K + 1; i++)
 	{
-		c1[i] = ((uint64_t)c1[i] * (uint64_t)s[i]) % Q;
+		c1[i] = barrett_2q2((uint64_t)(con_sub(c1[i])) * (uint64_t)s[i]);
 	}
 	
 	INTT_NDK_D(c1);
