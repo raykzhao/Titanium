@@ -16,7 +16,7 @@
 /* rejection sampling in the range of ZQ_T * Q < 2^24, 
  * then mod the sample by Q 
  * (to reduce the rejection rate) */
-#define ZQ_T ((1 << BARRETT_BITSHIFT_ZQ) / Q)
+#define ZQ_T BARRETT_FACTOR_ZQ
 #define ZQ_Q (Q * ZQ_T)
 
 #define B1_T (NUM_B1 / (K1 + 1)) /* the number of r_i exclusively sampling from B_1 */
