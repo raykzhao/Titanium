@@ -29,9 +29,9 @@
 
 /* omega_n: n-th root of unity mod Q */
 
-/* (in Montgomery form) */
-static const uint32_t w_3[2]={523302,658451};
+static const uint32_t w_3[2]={17202,1180878};
 
+/* (in Montgomery form) */
 static const uint32_t w_5[4][4]={{640502,10316,492719,38216},
 {10316,38216,640502,492719},
 {492719,640502,38216,10316},
@@ -915,8 +915,8 @@ static void ntt_butterfly_2048_3072(uint32_t *a, uint32_t n2)
 	c = a[N2_3072 + n2];
 	
 	a[n2] = barrett_4q(b + c);
-	a[N2_3072 + n2] = barrett_4q(b + montgomery(c * w_3[0]));
-	a[N2_3072 * 2 + n2] = barrett_4q(b + montgomery(c * w_3[1]));
+	a[N2_3072 + n2] = barrett_2q2(b + c * w_3[0]);
+	a[N2_3072 * 2 + n2] = barrett_2q2(b + c * w_3[1]);
 }
 
 /* 1024 * 3 --> 1024 * 3 */
