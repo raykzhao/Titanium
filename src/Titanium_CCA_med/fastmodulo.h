@@ -11,6 +11,23 @@
 #include "param.h"
 #include <stdint.h>
 
+/* Montgomery reduction
+ * Input: x < Q*R, where R=2^k and Q<R
+ * Output: m = x*R^{-1} % Q
+ * 
+ * b = -Q^{-1} % R
+ * t = ((x % R)*b) % R
+ * m = (x + t * Q) / R */
+
+#define MONTGOMERY_FACTOR 430079
+#define MONTGOMERY_SHIFT 23
+#define MONTGOMERY_MASK ((1 << MONTGOMERY_SHIFT) - 1)
+
+inline uint32_t montgomery(uint64_t t)
+{
+	return (t + ((((t & MONTGOMERY_MASK) * MONTGOMERY_FACTOR) & MONTGOMERY_MASK) * Q)) >> MONTGOMERY_SHIFT;
+}
+
 /* Input: x < 2^k
  * Output m = x % Q in [0, 2Q)
  * 
