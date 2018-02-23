@@ -31,14 +31,16 @@
  * m = x - t * Q */
 
 #define BARRETT_BITSHIFT_4Q 21 
-#define BARRETT_FACTOR_4Q ((1 << BARRETT_BITSHIFT_4Q) / Q) 
 #define BARRETT_BITSHIFT_8Q 22 
-#define BARRETT_FACTOR_8Q ((1 << BARRETT_BITSHIFT_8Q) / Q) 
 #define BARRETT_BITSHIFT_16Q 23 
-#define BARRETT_FACTOR_16Q ((1 << BARRETT_BITSHIFT_16Q) / Q) 
 
 #define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
-#define BARRETT_FACTOR_ZQ ((1 << BARRETT_BITSHIFT_ZQ) / Q) 
+
+#define BARRETT_FACTOR_4Q 4
+#define BARRETT_FACTOR_8Q 8
+#define BARRETT_FACTOR_16Q 17
+
+#define BARRETT_FACTOR_ZQ 35
 
 inline uint32_t barrett_zq(uint32_t t)
 {
