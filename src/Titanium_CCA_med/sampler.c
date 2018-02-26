@@ -156,7 +156,7 @@ void sampler_zq(uint32_t *sample, uint32_t slen, uint32_t bytpc)
 			x = LOAD_ZQ(r + ZQ_BYTES * (i++));
 		} while (ct_ge_u32(x, ZQ_Q)); /* rejection in the range of ZQ_T * Q */
 		
-		sample[j++] = barrett_zq(x); /* barrett reduction here */
+		sample[j++] = barrett_short(x); /* barrett reduction here */
 	}
 }
 
