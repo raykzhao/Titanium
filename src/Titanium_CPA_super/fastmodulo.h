@@ -19,13 +19,17 @@
  * t = ((x % R)*b) % R
  * m = (x + t * Q) / R */
 
-#define MONTGOMERY_FACTOR 64112639
-#define MONTGOMERY_SHIFT 26
-#define MONTGOMERY_MASK ((1 << MONTGOMERY_SHIFT) - 1)
+#define MONTGOMERY_FACTOR 3419555839
+#define MONTGOMERY_SHIFT 32
 
 inline uint32_t montgomery(uint64_t t)
 {
-	return (t + ((((t & MONTGOMERY_MASK) * MONTGOMERY_FACTOR) & MONTGOMERY_MASK) * Q)) >> MONTGOMERY_SHIFT;
+	uint32_t x, y;
+	
+	x = t;
+	y = ((uint64_t)x) * MONTGOMERY_FACTOR;
+	
+	return (t + ((uint64_t)y) * Q) >> MONTGOMERY_SHIFT;
 }
 
 /* Barrett reduction
@@ -36,52 +40,23 @@ inline uint32_t montgomery(uint64_t t)
  * t = floor((x * b) / 2^k), where t is an estimation of x / Q
  * m = x - t * Q */
 
-#define BARRETT_BITSHIFT_4Q 23 
-#define BARRETT_BITSHIFT_8Q 24 
-#define BARRETT_BITSHIFT_16Q 25 
-#define BARRETT_BITSHIFT_32Q 26 
+#define BARRETT_BITSHIFT_SHORT 32
+#define BARRETT_FACTOR_SHORT 3584
 
 #define BARRETT_BITSHIFT_2Q2 42
-
-#define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
-
-#define BARRETT_FACTOR_4Q 7
-#define BARRETT_FACTOR_8Q 14
-#define BARRETT_FACTOR_16Q 28
-#define BARRETT_FACTOR_32Q 56
-
 #define BARRETT_FACTOR_2Q2 3670909
 
+#define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
 #define BARRETT_FACTOR_ZQ 14
 
-inline uint32_t barrett_4q(uint32_t t)
+inline uint32_t barrett_short(uint64_t t)
 {
-	return t - (((t * BARRETT_FACTOR_4Q) >> BARRETT_BITSHIFT_4Q) * Q);
-}
-
-inline uint32_t barrett_8q(uint32_t t)
-{
-	return t - (((t * BARRETT_FACTOR_8Q) >> BARRETT_BITSHIFT_8Q) * Q);
-}
-
-inline uint32_t barrett_16q(uint32_t t)
-{
-	return t - (((t * BARRETT_FACTOR_16Q) >> BARRETT_BITSHIFT_16Q) * Q);
-}
-
-inline uint32_t barrett_32q(uint32_t t)
-{
-	return t - (((t * BARRETT_FACTOR_32Q) >> BARRETT_BITSHIFT_32Q) * Q);
+	return t - (((t * BARRETT_FACTOR_SHORT) >> BARRETT_BITSHIFT_SHORT) * Q);
 }
 
 inline uint32_t barrett_2q2(uint64_t t)
 {
 	return t - (((t * BARRETT_FACTOR_2Q2) >> BARRETT_BITSHIFT_2Q2) * Q);
-}
-
-inline uint32_t barrett_zq(uint32_t t)
-{
-	return t - (((t * BARRETT_FACTOR_ZQ) >> BARRETT_BITSHIFT_ZQ) * Q);
 }
 
 #endif

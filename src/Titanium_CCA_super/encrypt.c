@@ -71,7 +71,7 @@ int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk, const unsigned 
 		/* b_i <-- as_i + e_i */
 		for (j = 0; j < D + K; j++)
 		{
-			b[i][j] = barrett_4q(a[i][j] + e[i][j]);
+			b[i][j] = a[i][j] + e[i][j];
 		}
 
 		/* pre-transform b_i here to make Enc and Dec faster */ 
@@ -166,7 +166,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	
 	for (i = 0; i < D; i++)
 	{
-		c2[i] = barrett_4q(c2[i] + mu[i]);
+		c2[i] = barrett_short(c2[i] + mu[i]);
 	}
 	
 	/* encode c <-- (c1,c2) */
