@@ -138,23 +138,17 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	}
 	
 	/* c1 <-- NTT(sum(r_i * a_i)) */
-	memset(c1, 0, sizeof(c1));
-	for (i = 0; i < T; i++)
+	for (j = 0; j < N + K + 1; j++)
 	{
-		for (j = 0; j < N + K + 1; j++)
-		{
-			c1[j] = barrett_4q2((uint64_t)c1[j] + (uint64_t)r[i][j] * (uint64_t)a[i][j]);
-		}
+		c1[j] = barrett_32q2((uint64_t)r[0][j] * (uint64_t)a[0][j] + (uint64_t)r[1][j] * (uint64_t)a[1][j] + (uint64_t)r[2][j] * (uint64_t)a[2][j] + (uint64_t)r[3][j] * (uint64_t)a[3][j] + (uint64_t)r[4][j] * (uint64_t)a[4][j]);
+		c1[j] = barrett_32q2((uint64_t)c1[j] + (uint64_t)r[5][j] * (uint64_t)a[5][j] + (uint64_t)r[6][j] * (uint64_t)a[6][j] + (uint64_t)r[7][j] * (uint64_t)a[7][j] + (uint64_t)r[8][j] * (uint64_t)a[8][j] + (uint64_t)r[9][j] * (uint64_t)a[9][j]);
 	}
 	
 	/* c2 <-- sum(r_i mp_d b_i) + mu */
-	memset(c2, 0, sizeof(c2));
-	for (i = 0; i < T; i++) 
+	for (j = 0; j < D + K + 1; j++)
 	{
-		for (j = 0; j < D + K + 1; j++)
-		{
-			c2[j] = barrett_4q2((uint64_t)c2[j] + (uint64_t)r[i][mapping_r[j]] * (uint64_t)b[i][j]);
-		}
+		c2[j] = barrett_32q2((uint64_t)r[0][mapping_r[j]] * (uint64_t)b[0][j] + (uint64_t)r[1][mapping_r[j]] * (uint64_t)b[1][j] + (uint64_t)r[2][mapping_r[j]] * (uint64_t)b[2][j] + (uint64_t)r[3][mapping_r[j]] * (uint64_t)b[3][j] + (uint64_t)r[4][mapping_r[j]] * (uint64_t)b[4][j]);
+		c2[j] = barrett_32q2((uint64_t)c2[j] + (uint64_t)r[5][mapping_r[j]] * (uint64_t)b[5][j] + (uint64_t)r[6][mapping_r[j]] * (uint64_t)b[6][j] + (uint64_t)r[7][mapping_r[j]] * (uint64_t)b[7][j] + (uint64_t)r[8][mapping_r[j]] * (uint64_t)b[8][j] + (uint64_t)r[9][mapping_r[j]] * (uint64_t)b[9][j]);
 	}
 	
 	INTT_DK_D(c2);

@@ -45,6 +45,9 @@ inline uint32_t montgomery(uint64_t t)
 #define BARRETT_BITSHIFT_4Q2 35 
 #define BARRETT_FACTOR_4Q2 399452
 
+#define BARRETT_BITSHIFT_64Q2 39 
+#define BARRETT_FACTOR_64Q2 6391246
+
 #define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
 #define BARRETT_FACTOR_ZQ 195
 
@@ -56,6 +59,11 @@ inline uint32_t barrett_short(uint64_t t)
 inline uint32_t barrett_4q2(uint64_t t)
 {
 	return t - (((t * BARRETT_FACTOR_4Q2) >> BARRETT_BITSHIFT_4Q2) * Q);
+}
+
+inline uint32_t barrett_64q2(uint64_t t)
+{
+	return t - (((t * BARRETT_FACTOR_64Q2) >> BARRETT_BITSHIFT_64Q2) * Q);
 }
 
 #endif
