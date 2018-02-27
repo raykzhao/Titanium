@@ -16,7 +16,7 @@ static inline uint32_t con_sub(uint32_t x) /* conditional subtraction of q */
 }
 
 /* convert a polynomial to a binary string */
-void poly_encode(unsigned char *b, const uint32_t *p, uint32_t len)
+void poly_encode(unsigned char *b, const uint64_t *p, uint32_t len)
 {
 	uint32_t i;
 	unsigned char *bb;
@@ -57,7 +57,7 @@ void poly_encode(unsigned char *b, const uint32_t *p, uint32_t len)
 }
 
 /* convert a binary string to a polynomial */
-void poly_decode(uint32_t *p, const unsigned char *b, uint32_t len)
+void poly_decode(uint64_t *p, const unsigned char *b, uint32_t len)
 {
 	uint32_t i;
 	unsigned char *bb;
@@ -67,19 +67,19 @@ void poly_decode(uint32_t *p, const unsigned char *b, uint32_t len)
 	{
 		bb = b + (i / 8) * Q_BITS;
 		
-		p[i] = ((uint32_t)bb[0]) | (((uint32_t)bb[1]) << 8) | ((((uint32_t)bb[2]) & 0x01) << 16);
-		p[i + 1] = (((uint32_t)bb[2]) >> 1) | (((uint32_t)bb[3]) << 7) | ((((uint32_t)bb[4]) & 0x03) << 15);
-		p[i + 2] = (((uint32_t)bb[4]) >> 2) | (((uint32_t)bb[5]) << 6) | ((((uint32_t)bb[6]) & 0x07) << 14);
-		p[i + 3] = (((uint32_t)bb[6]) >> 3) | (((uint32_t)bb[7]) << 5) | ((((uint32_t)bb[8]) & 0x0f) << 13);
-		p[i + 4] = (((uint32_t)bb[8]) >> 4) | (((uint32_t)bb[9]) << 4) | ((((uint32_t)bb[10]) & 0x1f) << 12);
-		p[i + 5] = (((uint32_t)bb[10]) >> 5) | (((uint32_t)bb[11]) << 3) | ((((uint32_t)bb[12]) & 0x3f) << 11);
-		p[i + 6] = (((uint32_t)bb[12]) >> 6) | (((uint32_t)bb[13]) << 2) | ((((uint32_t)bb[14]) & 0x7f) << 10);
-		p[i + 7] = (((uint32_t)bb[14]) >> 7) | (((uint32_t)bb[15]) << 1) | (((uint32_t)bb[16]) << 9);
+		p[i] = ((uint64_t)bb[0]) | (((uint64_t)bb[1]) << 8) | ((((uint64_t)bb[2]) & 0x01) << 16);
+		p[i + 1] = (((uint64_t)bb[2]) >> 1) | (((uint64_t)bb[3]) << 7) | ((((uint64_t)bb[4]) & 0x03) << 15);
+		p[i + 2] = (((uint64_t)bb[4]) >> 2) | (((uint64_t)bb[5]) << 6) | ((((uint64_t)bb[6]) & 0x07) << 14);
+		p[i + 3] = (((uint64_t)bb[6]) >> 3) | (((uint64_t)bb[7]) << 5) | ((((uint64_t)bb[8]) & 0x0f) << 13);
+		p[i + 4] = (((uint64_t)bb[8]) >> 4) | (((uint64_t)bb[9]) << 4) | ((((uint64_t)bb[10]) & 0x1f) << 12);
+		p[i + 5] = (((uint64_t)bb[10]) >> 5) | (((uint64_t)bb[11]) << 3) | ((((uint64_t)bb[12]) & 0x3f) << 11);
+		p[i + 6] = (((uint64_t)bb[12]) >> 6) | (((uint64_t)bb[13]) << 2) | ((((uint64_t)bb[14]) & 0x7f) << 10);
+		p[i + 7] = (((uint64_t)bb[14]) >> 7) | (((uint64_t)bb[15]) << 1) | (((uint64_t)bb[16]) << 9);
 	}
 }
 
 /* convert a polynomial to a binary string (with compression) */
-void poly_encode_c2(unsigned char *b, const uint32_t *p, uint32_t len)
+void poly_encode_c2(unsigned char *b, const uint64_t *p, uint32_t len)
 {
 	uint32_t i;
 
@@ -91,14 +91,14 @@ void poly_encode_c2(unsigned char *b, const uint32_t *p, uint32_t len)
 }
 
 /* convert a binary string to a polynomial (with compression) */
-void poly_decode_c2(uint32_t *p, const unsigned char *b, uint32_t len)
+void poly_decode_c2(uint64_t *p, const unsigned char *b, uint32_t len)
 {
 	uint32_t i;
 	
 	for (i = 0; i < len; i++)
 	{
 		/* shift the compressed coordinates back */
-		p[i] = ((uint32_t)(LOAD_C2(b + i * C2_COMPRESSION_BYTE))) << C2_COMPRESSION_BITS;
+		p[i] = ((uint64_t)(LOAD_C2(b + i * C2_COMPRESSION_BYTE))) << C2_COMPRESSION_BITS;
 	}
 }
 

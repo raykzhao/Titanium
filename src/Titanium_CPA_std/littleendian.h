@@ -27,15 +27,12 @@ inline uint32_t load_24(const unsigned char *x)
 
 inline uint32_t load_32(const unsigned char *x)
 {
-	return ((uint32_t)(*x)) | (((uint32_t)(*(x + 1))) << 8) | (((uint32_t)(*(x + 2))) << 16) | (((uint32_t)(*(x + 3))) << 24);
+	return *((uint32_t *)x);
 }
 
 inline void store_32(unsigned char *x, uint32_t c)
 {
-	*x = c;
-	*(x + 1) = c >> 8;
-	*(x + 2) = c >> 16;
-	*(x + 3) = c >> 24;
+	*((uint32_t *)x) = c;
 }
 
 #endif

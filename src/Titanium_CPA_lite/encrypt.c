@@ -16,16 +16,24 @@
 #include "pack.h"
 #include <string.h>
 #include <stdint.h>
+#include <x86intrin.h>
+
+static const __m256i V_B4Q_B4Q_B4Q_B4Q = {BARRETT_FACTOR_4Q, BARRETT_FACTOR_4Q, BARRETT_FACTOR_4Q, BARRETT_FACTOR_4Q};
+static const __m256i V_Q_Q_Q_Q = {Q, Q, Q, Q};
+static const __m256i V_Q2_Q2_Q2_Q2 = {Q2, Q2, Q2, Q2};
+static const __m256i V_1_1_1_1 = {1, 1, 1, 1};
+static const __m256i V_ENC = {(Q + 1) / 2, (Q + 1) / 2, (Q + 1) / 2, (Q + 1) / 2};
 
 int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk)
 {
-	uint32_t s[DIM_3];
-	uint32_t a[T][DIM_3];
-	uint32_t b[T][DIM_1];
-	uint32_t e[T][D + K];
+	uint64_t s[DIM_3];
+	uint64_t a[T][DIM_3];
+	uint64_t b[T][DIM_1];
+	uint64_t e[T][D + K1 + 1];
 	unsigned char randomness[CRYPTO_RANDOMBYTES];
 	unsigned char seed_sk[CRYPTO_RANDOMBYTES], seed_pk[CRYPTO_RANDOMBYTES];
 	uint32_t i, j;
+	__m256i u, v, t, t1;
 	
 	randombytes(randomness, CRYPTO_RANDOMBYTES);
 	fastrandombytes_setseed(randomness);
@@ -38,7 +46,7 @@ int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk)
 	for (i = 0; i < T; i++)
 	{
 		sampler_zq(a[i], N, ZQ_BYTPCA); /* a_i <-- U(Z_q^{<n}[x]) */
-		memset(a[i] + N, 0, sizeof(uint32_t) * (N_pad - N));
+		memset(a[i] + N, 0, sizeof(uint64_t) * (N_pad - N));
 		NTT_N_NDK(a[i]); /* transform a_i here */
 	}
 	
@@ -54,21 +62,35 @@ int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk)
 	for (i = 0; i < T; i++)
 	{
 		/* a_i <-- a_i mp_{d+k} s */
-		for (j = 0; j < DIM_3; j++)
+		for (j = 0; j < DIM_3; j += 4)
 		{
-			a[i][j] = barrett_4q2((uint64_t)a[i][j] * (uint64_t)s[j]);
+			u = _mm256_loadu_si256((__m256i *)(a[i] + j));
+			v = _mm256_loadu_si256((__m256i *)(s + j));
+			t = _mm256_mul_epu32(u, v);
+			_mm256_storeu_si256((__m256i *)(a[i] + j), t);
+			a[i][j] %= Q;
+			a[i][j + 1] %= Q;
+			a[i][j + 2] %= Q;
+			a[i][j + 3] %= Q;
 		}
 		
 		INTT_NDK_DK(a[i]);
 		
 		/* b_i <-- as_i + e_i */
-		for (j = 0; j < D + K; j++)
+		for (j = 0; j < D + K1 + 1; j += 4)
 		{
-			b[i][j] = a[i][j] + e[i][j];
+			u = _mm256_loadu_si256((__m256i *)(a[i] + j));
+			v = _mm256_loadu_si256((__m256i *)(e[i] + j));
+			t = _mm256_add_epi64(u, v);
+			t1 = _mm256_mul_epu32(t, V_B4Q_B4Q_B4Q_B4Q);
+			t1 = _mm256_srli_epi64(t1, BARRETT_BITSHIFT_4Q);
+			t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
+			t = _mm256_sub_epi64(t, t1);
+			_mm256_storeu_si256((__m256i *)(b[i] + j), t);
 		}
 
 		/* pre-transform b_i here to make Enc and Dec faster */ 
-		memset(b[i] + (D + K), 0, sizeof(uint32_t) * (K_pad - K + 1));
+		memset(b[i] + (D + K1), 0, sizeof(uint64_t) * (K_pad - K1 + 1));
 		NTT_DK_DK_INV(b[i]);
 	}
 	
@@ -88,15 +110,16 @@ int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk)
 
 int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned char *m, unsigned long long mlen, const unsigned char *pk)
 {
-	uint32_t mu[D];
-	uint32_t r[T][DIM_2];
-	uint32_t r2[T][DIM_2];
-	uint32_t a[T][DIM_2];
-	uint32_t b[T][DIM_1];
-	uint32_t c1[DIM_2];
-	uint32_t c2[DIM_1];
+	uint64_t mu[D];
+	uint64_t r[T][DIM_2];
+	uint64_t r2[T][DIM_2];
+	uint64_t a[T][DIM_2];
+	uint64_t b[T][DIM_1];
+	uint64_t c1[DIM_2];
+	uint64_t c2[DIM_1];
 	uint32_t i, j;
 	unsigned char randomness[CRYPTO_RANDOMBYTES];
+	__m256i u, v, t, t1;
 	
 	/* reconstruct a_i by the seed saved in pk */
 	fastrandombytes_setseed(pk);
@@ -104,7 +127,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	for(i = 0; i < T; i++)
 	{
 		sampler_zq(a[i], N, ZQ_BYTPCA); /* reconstruct a_i */
-		memset(a[i] + N, 0, sizeof(uint32_t) * (N_pad - N));
+		memset(a[i] + N, 0, sizeof(uint64_t) * (N_pad - N));
 		NTT_N_NK(a[i]); /* transform a_i here */
 	}
 	
@@ -121,17 +144,22 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	memset(mu, 0, sizeof(mu));
 	for (i = 0; i < mlen; i++)
 	{
-		for (j = 0; j < 8; j++)
-		{
-			mu[i * 8 + j] = ((m[i] >> j) & 0x1) * ((Q + 1) / 2);
-		}
+		t = _mm256_set_epi64x(m[i] >> 3, m[i] >> 2, m[i] >> 1, m[i]);
+		t = _mm256_and_si256(t, V_1_1_1_1);
+		t = _mm256_mul_epu32(t, V_ENC);
+		_mm256_storeu_si256((__m256i *)(mu + i * 8), t);
+
+		t = _mm256_set_epi64x(m[i] >> 7, m[i] >> 6, m[i] >> 5, m[i] >> 4);
+		t = _mm256_and_si256(t, V_1_1_1_1);
+		t = _mm256_mul_epu32(t, V_ENC);
+		_mm256_storeu_si256((__m256i *)(mu + i * 8 + 4), t);
 	}
 	
 	/* sample r_i <-- lambda_r over Z_q^{<k+1}[x] */
 	sampler_zb(r);
 	for (i = 0; i < T; i++)
 	{
-		memset(r[i] + (K + 1), 0, sizeof(uint32_t) * (K_pad - K));
+		memset(r[i] + (K1 + 1), 0, sizeof(uint64_t) * (K_pad - K1));
 	}
 	memcpy(r2, r, sizeof(r));
 	for (i = 0; i < T; i++)
@@ -142,22 +170,55 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	}
 	
 	/* c1 <-- NTT(sum(r_i * a_i)) */
-	for (j = 0; j < DIM_2; j++)
+	memset(c1, 0, sizeof(c1));
+	for (i = 0; i < T; i++)
 	{
-		c1[j] = barrett_32q2((uint64_t)r[0][j] * (uint64_t)a[0][j] + (uint64_t)r[1][j] * (uint64_t)a[1][j] + (uint64_t)r[2][j] * (uint64_t)a[2][j] + (uint64_t)r[3][j] * (uint64_t)a[3][j] + (uint64_t)r[4][j] * (uint64_t)a[4][j] + (uint64_t)r[5][j] * (uint64_t)a[5][j] + (uint64_t)r[6][j] * (uint64_t)a[6][j] + (uint64_t)r[7][j] * (uint64_t)a[7][j]);
+		for (j = 0; j < DIM_2; j += 4)
+		{
+			u = _mm256_loadu_si256((__m256i *)(c1 + j));
+			v = _mm256_loadu_si256((__m256i *)(r[i] + j));
+			t = _mm256_loadu_si256((__m256i *)(a[i] + j));
+			v = _mm256_mul_epu32(v, t);
+			t = _mm256_add_epi64(u, v);
+			_mm256_storeu_si256((__m256i *)(c1 + j), t);
+			c1[j] %= Q;
+			c1[j + 1] %= Q;
+			c1[j + 2] %= Q;
+			c1[j + 3] %= Q;
+		}
 	}
 	
 	/* c2 <-- sum(r_i mp_d b_i) + mu */
-	for (j = 0; j < DIM_1; j++)
+	memset(c2, 0, sizeof(c2));
+	for (i = 0; i < T; i++) 
 	{
-		c2[j] = barrett_32q2((uint64_t)r2[0][j] * (uint64_t)b[0][j] + (uint64_t)r2[1][j] * (uint64_t)b[1][j] + (uint64_t)r2[2][j] * (uint64_t)b[2][j] + (uint64_t)r2[3][j] * (uint64_t)b[3][j] + (uint64_t)r2[4][j] * (uint64_t)b[4][j] + (uint64_t)r2[5][j] * (uint64_t)b[5][j] + (uint64_t)r2[6][j] * (uint64_t)b[6][j] + (uint64_t)r2[7][j] * (uint64_t)b[7][j]);
+		for (j = 0; j < DIM_1; j += 4)
+		{
+			u = _mm256_loadu_si256((__m256i *)(c2 + j));
+			v = _mm256_loadu_si256((__m256i *)(r2[i] + j));
+			t = _mm256_loadu_si256((__m256i *)(b[i] + j));
+			v = _mm256_mul_epu32(v, t);
+			t = _mm256_add_epi64(u, v);
+			_mm256_storeu_si256((__m256i *)(c2 + j), t);
+			c2[j] %= Q;
+			c2[j + 1] %= Q;
+			c2[j + 2] %= Q;
+			c2[j + 3] %= Q;
+		}
 	}
 	
 	INTT_DK_D(c2);
 	
-	for (i = 0; i < D; i++)
+	for (i = 0; i < D; i += 4)
 	{
-		c2[i] = barrett_short(c2[i] + mu[i]);
+		u = _mm256_loadu_si256((__m256i *)(c2 + i));
+		v = _mm256_loadu_si256((__m256i *)(mu + i));
+		t = _mm256_add_epi64(u, v);
+		t1 = _mm256_mul_epu32(t, V_B4Q_B4Q_B4Q_B4Q);
+		t1 = _mm256_srli_epi64(t1, BARRETT_BITSHIFT_4Q);
+		t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
+		t = _mm256_sub_epi64(t, t1);
+		_mm256_storeu_si256((__m256i *)(c2 + i), t);
 	}
 	
 	/* encode c <-- (c1,c2) */
@@ -171,11 +232,12 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 
 int crypto_encrypt_open(unsigned char *m, unsigned long long *mlen, const unsigned char *c, unsigned long long clen, const unsigned char *sk)
 {
-	uint32_t s[DIM_3];
-	uint32_t c1[DIM_3];
-	uint32_t c2[D];
-	uint32_t c_prime[D];
+	uint64_t s[DIM_3];
+	uint64_t c1[DIM_3];
+	uint64_t c2[D];
+	uint64_t c_prime[D];
 	uint32_t i, j;
+	__m256i u, v, t;
 
 	/* recover sk */
 	fastrandombytes_setseed(sk);
@@ -191,17 +253,28 @@ int crypto_encrypt_open(unsigned char *m, unsigned long long *mlen, const unsign
 	/* c1 <-- c1 mp_d s*/
 	NTT_NK_NDK(c1);
 	
-	for (i = 0; i < DIM_3; i++)
+	for (i = 0; i < DIM_3; i += 4)
 	{
-		c1[i] = barrett_4q2((uint64_t)c1[i] * (uint64_t)s[i]);
+		u = _mm256_loadu_si256((__m256i *)(c1 + i));
+		v = _mm256_loadu_si256((__m256i *)(s + i));
+		t = _mm256_mul_epu32(u, v);
+		_mm256_storeu_si256((__m256i *)(c1 + i), t);
+		c1[i] %= Q;
+		c1[i + 1] %= Q;
+		c1[i + 2] %= Q;
+		c1[i + 3] %= Q;
 	}
 	
 	INTT_NDK_D(c1);
 
 	/* c^prime <-- c2 - c1 mp_d s */	
-	for (i = 0; i < D; i++)
+	for (i = 0; i < D; i += 4)
 	{
-		c_prime[i] = Q2 + c2[i] - c1[i];
+		u = _mm256_loadu_si256((__m256i *)(c2 + i));
+		v = _mm256_loadu_si256((__m256i *)(c1 + i));
+		t = _mm256_add_epi64(V_Q2_Q2_Q2_Q2, u);
+		t = _mm256_sub_epi64(t, v);
+		_mm256_storeu_si256((__m256i *)(c_prime + i), t);
 	}
 
 	/* decode the message (still work for x+kQ) */

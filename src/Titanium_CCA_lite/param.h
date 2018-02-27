@@ -24,7 +24,7 @@
 #define N 800
 #define N_pad 1024
 
-#define K 479
+#define K1 479
 #define K_pad 512
 
 #define D 256
