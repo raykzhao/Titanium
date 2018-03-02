@@ -267,8 +267,6 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 		a[j + 3] = montgomery((q_level + u - v) * omega[num_of_problems]);
 	}
 	
-	q_level <<= 1;
-	
 	for (k = 0; k < (n >> 1); k++)
 	{
 		j = k << 1;
