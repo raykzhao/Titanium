@@ -222,8 +222,6 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 	a[0] = u + v;
 	a[d] = Q2 + u - v;
 
-	j_omega = 1;
-
 	for (j = 1; j < d; j++)
 	{
 		/* Gentleman-Sande's butterfly
@@ -232,9 +230,7 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 		v = a[j + d];
 		
 		a[j] = u + v;
-		a[j + d] = montgomery((Q2 + u - v) * omega[j_omega]);
-				
-		j_omega++;
+		a[j + d] = montgomery((Q2 + u - v) * omega[j]);
 	} 
 	
 	d >>= 1;
