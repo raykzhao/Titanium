@@ -11,9 +11,16 @@
 #include "param.h"
 #include <stdint.h>
 
-#define MONTGOMERY_FACTOR 737279
-#define MONTGOMERY_SHIFT 22
-#define MONTGOMERY_MASK ((1 << MONTGOMERY_SHIFT) - 1)
+/* Montgomery reduction
+ * Input: x < Q*R, where R=2^k and Q<R
+ * Output: m = x*R^{-1} % Q
+ * 
+ * b = -Q^{-1} % R
+ * t = ((x % R)*b) % R
+ * m = (x + t * Q) / R */
+
+#define MONTGOMERY_FACTOR 1879785471
+#define MONTGOMERY_SHIFT 32
 
 /* Input: x < 2^k
  * Output m = x % Q in [0, 2Q)
@@ -22,23 +29,23 @@
  * t = floor((x * b) / 2^k), where t is an estimation of x / Q
  * m = x - t * Q */
 
-#define BARRETT_BITSHIFT_4Q 22 
-#define BARRETT_BITSHIFT_8Q 23 
-#define BARRETT_BITSHIFT_16Q 24 
-#define BARRETT_BITSHIFT_32Q 25 
+#define BARRETT_BITSHIFT_SHORT 32
+#define BARRETT_FACTOR_SHORT 5825
+
+#define BARRETT_BITSHIFT_4Q2 41 
+#define BARRETT_FACTOR_4Q2 2982612
 
 #define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
-
-#define BARRETT_FACTOR_4Q 5
-#define BARRETT_FACTOR_8Q 11
-#define BARRETT_FACTOR_16Q 22
-#define BARRETT_FACTOR_32Q 45
-
 #define BARRETT_FACTOR_ZQ 22
 
-inline uint32_t barrett_zq(uint32_t t)
+inline uint32_t barrett_short(uint64_t t)
 {
-	return t - (((t * BARRETT_FACTOR_ZQ) >> BARRETT_BITSHIFT_ZQ) * Q);
+	return t - (((t * BARRETT_FACTOR_SHORT) >> BARRETT_BITSHIFT_SHORT) * Q);
+}
+
+inline uint32_t barrett_4q2(uint64_t t)
+{
+	return t - (((t * BARRETT_FACTOR_4Q2) >> BARRETT_BITSHIFT_4Q2) * Q);
 }
 
 #endif
