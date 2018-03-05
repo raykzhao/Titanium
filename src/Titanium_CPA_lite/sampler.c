@@ -30,6 +30,7 @@ static const __m256i V_fe_fe_fe_fe = {0xfffffffffffffffeLL, 0xfffffffffffffffeLL
 static const __m256i V_Q_Q_Q_Q = {Q, Q, Q, Q};
 static const __m256i V_B_ADDMASK = {BINOMIAL_ADDMASK, BINOMIAL_ADDMASK, BINOMIAL_ADDMASK, BINOMIAL_ADDMASK};
 static const __m256i V_B_MASK = {BINOMIAL_MASK, BINOMIAL_MASK, BINOMIAL_MASK, BINOMIAL_MASK};
+static const __m256i V_0_1_2_3 = {0, 1, 2, 3};
 
 /* Sampler of r_i
  * generate Ndec1 samples by B_1 and T*(K+1)-Ndec1 samples by B_2
@@ -40,7 +41,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 	uint32_t i;
 	uint32_t t;
 	unsigned char *rr;
-	__m256i y, x;
+	__m256i y, x, z;
 	
 	fastrandombytes(r, B_BYTE * T * (K1 + 1) + T * (K1 + 1) / 8);
 	
@@ -101,23 +102,24 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 		rr = r + (B_BYTE * T * (K1 + 1)) + (t * (K1 + 1) / 8);
 		for (i = 0; i < K1 + 1; i += 8)
 		{
-			x = _mm256_set_epi64x(rr[i / 8] >> 3, rr[i / 8] >> 2, rr[i / 8] >> 1, rr[i / 8]);
-			x = _mm256_and_si256(x, V_1_1_1_1);
-			x = _mm256_sub_epi64(V_0_0_0_0, x);
-			x = _mm256_and_si256(x, V_fe_fe_fe_fe);
-			x = _mm256_xor_si256(x, V_1_1_1_1);
+			x = _mm256_set1_epi64x(rr[i / 8]);
+			x = _mm256_srlv_epi64(x, V_0_1_2_3);
+			z = _mm256_and_si256(x, V_1_1_1_1);
+			z = _mm256_sub_epi64(V_0_0_0_0, z);
+			z = _mm256_and_si256(z, V_fe_fe_fe_fe);
+			z = _mm256_xor_si256(z, V_1_1_1_1);
 			y = _mm256_loadu_si256((__m256i *)(sample[t] + i));
-			y = _mm256_mul_epi32(y, x);
+			y = _mm256_mul_epi32(y, z);
 			y = _mm256_add_epi64(V_Q_Q_Q_Q, y);
 			_mm256_storeu_si256((__m256i *)(sample[t] + i), y);
 			
-			x = _mm256_set_epi64x(rr[i / 8] >> 7, rr[i / 8] >> 6, rr[i / 8] >> 5, rr[i / 8] >> 4);
-			x = _mm256_and_si256(x, V_1_1_1_1);
-			x = _mm256_sub_epi64(V_0_0_0_0, x);
-			x = _mm256_and_si256(x, V_fe_fe_fe_fe);
-			x = _mm256_xor_si256(x, V_1_1_1_1);
+			x = _mm256_srli_epi64(x, 4);
+			z = _mm256_and_si256(x, V_1_1_1_1);
+			z = _mm256_sub_epi64(V_0_0_0_0, z);
+			z = _mm256_and_si256(z, V_fe_fe_fe_fe);
+			z = _mm256_xor_si256(z, V_1_1_1_1);
 			y = _mm256_loadu_si256((__m256i *)(sample[t] + i + 4));
-			y = _mm256_mul_epi32(y, x);
+			y = _mm256_mul_epi32(y, z);
 			y = _mm256_add_epi64(V_Q_Q_Q_Q, y);
 			_mm256_storeu_si256((__m256i *)(sample[t] + i + 4), y);
 		}	
@@ -157,7 +159,7 @@ void sampler_zq(uint64_t *sample, uint32_t slen, uint32_t bytpc)
 			x = LOAD_ZQ(r + ZQ_BYTES * (i++));
 		} while (ct_ge_u32(x, ZQ_Q)); /* rejection in the range of ZQ_T * Q */
 		
-		sample[j++] = barrett_zq(x); /* barrett reduction here */
+		sample[j++] = barrett_short(x); /* barrett reduction here */
 	}
 }
 

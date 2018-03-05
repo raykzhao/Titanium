@@ -19,9 +19,8 @@
  * t = ((x % R)*b) % R
  * m = (x + t * Q) / R */
 
-#define MONTGOMERY_FACTOR 346623
-#define MONTGOMERY_SHIFT 19
-#define MONTGOMERY_MASK ((1 << MONTGOMERY_SHIFT) - 1)
+#define MONTGOMERY_FACTOR 1050495487
+#define MONTGOMERY_SHIFT 32
 
 /* Input: x < 2^k
  * Output m = x % Q in [0, 2Q)
@@ -30,21 +29,31 @@
  * t = floor((x * b) / 2^k), where t is an estimation of x / Q
  * m = x - t * Q */
 
-#define BARRETT_BITSHIFT_4Q 19 
-#define BARRETT_BITSHIFT_8Q 20 
-#define BARRETT_BITSHIFT_16Q 21 
+#define BARRETT_BITSHIFT_SHORT 32
+#define BARRETT_FACTOR_SHORT 50839
+
+#define BARRETT_BITSHIFT_4Q2 35 
+#define BARRETT_FACTOR_4Q2 406715
+
+#define BARRETT_BITSHIFT_32Q2 38 
+#define BARRETT_FACTOR_32Q2 3253724
 
 #define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
-
-#define BARRETT_FACTOR_4Q 6
-#define BARRETT_FACTOR_8Q 12
-#define BARRETT_FACTOR_16Q 24
-
 #define BARRETT_FACTOR_ZQ 198
 
-inline uint32_t barrett_zq(uint32_t t)
+inline uint32_t barrett_short(uint64_t t)
 {
-	return t - (((t * BARRETT_FACTOR_ZQ) >> BARRETT_BITSHIFT_ZQ) * Q);
+	return t - (((t * BARRETT_FACTOR_SHORT) >> BARRETT_BITSHIFT_SHORT) * Q);
+}
+
+inline uint32_t barrett_4q2(uint64_t t)
+{
+	return t - (((t * BARRETT_FACTOR_4Q2) >> BARRETT_BITSHIFT_4Q2) * Q);
+}
+
+inline uint32_t barrett_32q2(uint64_t t)
+{
+	return t - (((t * BARRETT_FACTOR_32Q2) >> BARRETT_BITSHIFT_32Q2) * Q);
 }
 
 #endif

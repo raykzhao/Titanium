@@ -157,14 +157,12 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	}
 	
 	/* c1 <-- NTT(sum(r_i * a_i)) */
-	memset(c1, 0, sizeof(c1));
 	for (j = 0; j < DIM_2; j++)
 	{
 		c1[j] = barrett_64q2((uint64_t)r[0][j] * (uint64_t)a[0][j] + (uint64_t)r[1][j] * (uint64_t)a[1][j] + (uint64_t)r[2][j] * (uint64_t)a[2][j] + (uint64_t)r[3][j] * (uint64_t)a[3][j] + (uint64_t)r[4][j] * (uint64_t)a[4][j] + (uint64_t)r[5][j] * (uint64_t)a[5][j] + (uint64_t)r[6][j] * (uint64_t)a[6][j] + (uint64_t)r[7][j] * (uint64_t)a[7][j] + (uint64_t)r[8][j] * (uint64_t)a[8][j]);
 	}
 	
 	/* c2 <-- sum(r_i mp_d b_i) + mu */
-	memset(c2, 0, sizeof(c2));
 	for (j = 0; j < DIM_1; j++)
 	{
 		c2[j] = barrett_64q2((uint64_t)r2[0][j] * (uint64_t)b[0][j] + (uint64_t)r2[1][j] * (uint64_t)b[1][j] + (uint64_t)r2[2][j] * (uint64_t)b[2][j] + (uint64_t)r2[3][j] * (uint64_t)b[3][j] + (uint64_t)r2[4][j] * (uint64_t)b[4][j] + (uint64_t)r2[5][j] * (uint64_t)b[5][j] + (uint64_t)r2[6][j] * (uint64_t)b[6][j] + (uint64_t)r2[7][j] * (uint64_t)b[7][j] + (uint64_t)r2[8][j] * (uint64_t)b[8][j]);
