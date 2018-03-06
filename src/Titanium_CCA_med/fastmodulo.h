@@ -22,16 +22,6 @@
 #define MONTGOMERY_FACTOR 4010184703
 #define MONTGOMERY_SHIFT 32
 
-inline uint32_t montgomery(uint64_t t)
-{
-	uint32_t x, y;
-	
-	x = t;
-	y = ((uint64_t)x) * MONTGOMERY_FACTOR;
-	
-	return (t + ((uint64_t)y) * Q) >> MONTGOMERY_SHIFT;
-}
-
 /* Input: x < 2^k
  * Output m = x % Q in [0, 2Q)
  * 

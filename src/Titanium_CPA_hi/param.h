@@ -23,7 +23,7 @@
 
 #define N 1536
 
-#define K 767
+#define K1 767
 
 #define D 256
 #define D_BYTES 32 /* 256 --> 32 bytes */
@@ -45,7 +45,7 @@
 
 #define T 7
 
-/* the standard deviation of binomial sampler is sqrt(k/2)=1.41 */
+/* the standard deviation of binomial sampler is sqrt(k/2)=1.58 */
 #define BINOMIAL_K 4
 #define BINOMIAL_BYTE 1
 #define BINOMIAL_ADDMASK 0x11

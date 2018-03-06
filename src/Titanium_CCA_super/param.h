@@ -23,7 +23,7 @@
 
 #define N 2048
 
-#define K 1023
+#define K1 1023
 
 #define D 256
 #define D_BYTES 32 /* 256 --> 32 bytes */

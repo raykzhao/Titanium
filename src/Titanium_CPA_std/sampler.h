@@ -11,8 +11,8 @@
 #include "param.h"
 #include <stdint.h>
 
-void sampler_zb(uint32_t sample[T][N + K + 1]);
-void sampler_zq(uint32_t *sample, uint32_t slen, uint32_t bytpc);
-void sampler_binomial(uint32_t sample[T][D + K]);
+void sampler_zb(uint64_t sample[T][N + K1 + 1]);
+void sampler_zq(uint64_t *sample, uint32_t slen, uint32_t bytpc);
+void sampler_binomial(uint64_t sample[T][D + K1 + 1]);
 
 #endif

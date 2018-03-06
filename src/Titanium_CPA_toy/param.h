@@ -24,7 +24,7 @@
 #define N 768
 #define N_act 684 /* actual N */
 
-#define K 255
+#define K1 255
 
 #define D 256
 #define D_BYTES 32 /* 256 --> 32 bytes */
