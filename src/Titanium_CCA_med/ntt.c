@@ -200,7 +200,7 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 	uint32_t j1, j2, j_omega;
 	uint32_t k, j;
 	
-	uint64_t u, v;
+	uint64_t u, v, x, y, t;
 	
 	uint32_t q_level = Q << 2;
 	
@@ -262,33 +262,21 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 		q_level <<= 1;
 	}
 	
-	/* last 2 levels (save some overhead of iterations) */
+	/* merged last 2 levels (save some overhead of iterations) */
 	for (k = 0; k < num_of_problems; k++)
 	{
 		j = k << 2;
 		
 		u = a[j];
-		v = a[j + 2];
-			
-		a[j] = u + v;
-		a[j + 2] = q_level + u - v;
-		
-		u = a[j + 1];
-		v = a[j + 3];
-
-		a[j + 1] = u + v;
-		a[j + 3] = montgomery((q_level + u - v) * omega[num_of_problems]);
-	}
-	
-	for (k = 0; k < (n >> 1); k++)
-	{
-		j = k << 1;
-		
-		u = a[j];
 		v = a[j + 1];
+		x = a[j + 2];
+		y = a[j + 3];
+		t = montgomery((q_level + v - y) * omega[num_of_problems]);
 		
-		a[j] = barrett_short(u + v);				
-		a[j + 1] = barrett_short(q_level + u - v);
+		a[j] = barrett_short(u + v + x + y);
+		a[j + 1] = barrett_short((q_level << 1) + u + x - v - y);
+		a[j + 2] = barrett_short(q_level + u + t - x);
+		a[j + 3] = barrett_short((q_level << 1) + u - x - t);
 	}
 }
 
