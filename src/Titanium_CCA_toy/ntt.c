@@ -181,8 +181,8 @@ static void ntt_2(uint64_t *a, uint32_t n, const uint64_t *omega)
 	uint32_t j1, j2, j_omega;
 	uint32_t k, j;
 	
-	__m256i u, v, t, t1, o, u1, v1, r1, r2;
-	__m256i q_level = {Q2, Q2, Q2, Q2};
+	__m256i u, v, t, t1, o, r1, r2, r3, r4, x, y, m;
+	__m256i q_level = {Q2, Q2, Q2, Q2}, q_level1;
 	
 	for (j = 0; j < d; j += 4)
 	{
@@ -249,65 +249,84 @@ static void ntt_2(uint64_t *a, uint32_t n, const uint64_t *omega)
 		q_level = _mm256_slli_epi64(q_level, 1);
 	}
 	
-	/* last 2 levels (save some overhead of iterations) */
-	for (k = 0; k < num_of_problems; k += 2)
+	/* merged last 2 levels (save some overhead of iterations) */
+	o = _mm256_set1_epi64x(omega[num_of_problems]);
+	q_level1 = _mm256_slli_epi64(q_level, 1);
+	
+	for (k = 0; k < num_of_problems; k += 4)
 	{
 		j = k << 2;
 		
-		u1 = _mm256_loadu_si256((__m256i *)(a + j));
-		v1 = _mm256_loadu_si256((__m256i *)(a + j + 4));
-		u = _mm256_permute2f128_si256(u1, v1, 0x20);
-		v = _mm256_permute2f128_si256(u1, v1, 0x31);
-		
-		r1 = _mm256_add_epi64(u, v);
-		
-		t = _mm256_add_epi64(q_level, u);
-		t = _mm256_sub_epi64(t, v);
-		o = _mm256_set_epi64x(omega[num_of_problems], omega[0], omega[num_of_problems], omega[0]);
+		u = _mm256_loadu_si256((__m256i *)(a + j));
+		v = _mm256_loadu_si256((__m256i *)(a + j + 4));
+		x = _mm256_loadu_si256((__m256i *)(a + j + 8));
+		y = _mm256_loadu_si256((__m256i *)(a + j + 12));
+
+		r1 = _mm256_unpacklo_epi64(u, v);
+		r2 = _mm256_unpacklo_epi64(x, y);
+		r3 = _mm256_unpackhi_epi64(u, v);
+		r4 = _mm256_unpackhi_epi64(x, y);	
+	
+		u = _mm256_permute2x128_si256(r1, r2, 0x20);
+		v = _mm256_permute2x128_si256(r3, r4, 0x20);
+		x = _mm256_permute2x128_si256(r1, r2, 0x31);
+		y = _mm256_permute2x128_si256(r3, r4, 0x31);
+
+		t = _mm256_add_epi64(q_level, v);
+		t = _mm256_sub_epi64(t, y);
 		t = _mm256_mul_epu32(t, o);
 		t1 = _mm256_mul_epu32(t, V_MF_MF_MF_MF);
 		t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
 		t1 = _mm256_add_epi64(t, t1);
-		r2 = _mm256_srli_epi64(t1, MONTGOMERY_SHIFT);
-		
-		u = _mm256_permute2f128_si256(r1, r2, 0x20);
-		v = _mm256_permute2f128_si256(r1, r2, 0x31);
-		
-		_mm256_storeu_si256((__m256i *)(a + j), u);
-		_mm256_storeu_si256((__m256i *)(a + j + 4), v);
-	}
-	
-	for (k = 0; k < (n >> 1); k += 4)
-	{
-		j = k << 1;
-		
-		u1 = _mm256_loadu_si256((__m256i *)(a + j));
-		v1 = _mm256_loadu_si256((__m256i *)(a + j + 4));
-		u1 = _mm256_permute4x64_epi64(u1, 0xD8);
-		v1 = _mm256_permute4x64_epi64(v1, 0xD8);
-		u = _mm256_permute2f128_si256(u1, v1, 0x20);
-		v = _mm256_permute2f128_si256(u1, v1, 0x31);
-		
+		m = _mm256_srli_epi64(t1, MONTGOMERY_SHIFT);
+
 		t = _mm256_add_epi64(u, v);
+		t = _mm256_add_epi64(t, x);
+		t = _mm256_add_epi64(t, y);
 		t1 = _mm256_mul_epu32(t, V_BS_BS_BS_BS);
 		t1 = _mm256_srli_epi64(t1, BARRETT_BITSHIFT_SHORT);
 		t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
 		r1 = _mm256_sub_epi64(t, t1);
-
-		t = _mm256_add_epi64(q_level, u);
+		
+		t = _mm256_add_epi64(q_level1, u);
+		t = _mm256_add_epi64(t, x);
 		t = _mm256_sub_epi64(t, v);
+		t = _mm256_sub_epi64(t, y);
 		t1 = _mm256_mul_epu32(t, V_BS_BS_BS_BS);
 		t1 = _mm256_srli_epi64(t1, BARRETT_BITSHIFT_SHORT);
 		t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
 		r2 = _mm256_sub_epi64(t, t1);
 
-		u1 = _mm256_permute2f128_si256(r1, r2, 0x20);
-		v1 = _mm256_permute2f128_si256(r1, r2, 0x31);
-		u = _mm256_permute4x64_epi64(u1, 0xD8);
-		v = _mm256_permute4x64_epi64(v1, 0xD8);
+		t = _mm256_add_epi64(q_level, u);
+		t = _mm256_add_epi64(t, m);
+		t = _mm256_sub_epi64(t, x);
+		t1 = _mm256_mul_epu32(t, V_BS_BS_BS_BS);
+		t1 = _mm256_srli_epi64(t1, BARRETT_BITSHIFT_SHORT);
+		t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
+		r3 = _mm256_sub_epi64(t, t1);
+
+		t = _mm256_add_epi64(q_level1, u);
+		t = _mm256_sub_epi64(t, x);
+		t = _mm256_sub_epi64(t, m);
+		t1 = _mm256_mul_epu32(t, V_BS_BS_BS_BS);
+		t1 = _mm256_srli_epi64(t1, BARRETT_BITSHIFT_SHORT);
+		t1 = _mm256_mul_epu32(t1, V_Q_Q_Q_Q);
+		r4 = _mm256_sub_epi64(t, t1);
 		
-		_mm256_storeu_si256((__m256i *)(a + j), u);
-		_mm256_storeu_si256((__m256i *)(a + j + 4), v);
+		u = _mm256_unpacklo_epi64(r1, r2);
+		v = _mm256_unpacklo_epi64(r3, r4);
+		x = _mm256_unpackhi_epi64(r1, r2);
+		y = _mm256_unpackhi_epi64(r3, r4);	
+	
+		r1 = _mm256_permute2x128_si256(u, v, 0x20);
+		r2 = _mm256_permute2x128_si256(x, y, 0x20);
+		r3 = _mm256_permute2x128_si256(u, v, 0x31);
+		r4 = _mm256_permute2x128_si256(x, y, 0x31);
+
+		_mm256_storeu_si256((__m256i *)(a + j), r1);
+		_mm256_storeu_si256((__m256i *)(a + j + 4), r2);
+		_mm256_storeu_si256((__m256i *)(a + j + 8), r3);
+		_mm256_storeu_si256((__m256i *)(a + j + 12), r4);
 	}
 }
 
