@@ -710,7 +710,7 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 	
 	uint64_t u, v, x, y, t;
 	
-	uint32_t q_level = Q << 2;
+	uint32_t q_level = Q << 2, q_level1;
 	
 	/* first iteration */
 	u = a[0];
@@ -771,6 +771,7 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 	}
 	
 	/* merged last 2 levels (save some overhead of iterations) */
+	q_level1 = q_level << 1;
 	for (k = 0; k < num_of_problems; k++)
 	{
 		j = k << 2;
@@ -782,9 +783,9 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 		t = montgomery((q_level + v - y) * omega[num_of_problems]);
 		
 		a[j] = barrett_short(u + v + x + y);
-		a[j + 1] = barrett_short((q_level << 1) + u + x - v - y);
+		a[j + 1] = barrett_short(q_level1 + u + x - v - y);
 		a[j + 2] = barrett_short(q_level + u + t - x);
-		a[j + 3] = barrett_short((q_level << 1) + u - x - t);
+		a[j + 3] = barrett_short(q_level1 + u - x - t);
 	}
 }
 
