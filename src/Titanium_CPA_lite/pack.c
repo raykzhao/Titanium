@@ -9,6 +9,10 @@
 #include "param.h"
 #include "littleendian.h"
 #include <stdint.h>
+#include <x86intrin.h>
+
+static const __m256i V_Q_Q_Q_Q = {Q, Q, Q, Q};
+static const __m256i V_1_1_1_1 = {1, 1, 1, 1};
 
 static inline uint32_t con_sub(uint32_t x) /* conditional subtraction of q */
 {
@@ -20,20 +24,28 @@ void poly_encode(unsigned char *b, const uint64_t *p, uint32_t len)
 {
 	uint32_t i;
 	unsigned char *bb;
-	uint32_t pp[8];
+	uint64_t pp[8];
+	__m256i u, t;
 	
 	/* pack 8 17-bit coordinates to 17 bytes */
 	for (i = 0; i < len; i += 8)
 	{
 		/* make sure each coordinate is smaller than Q */
-		pp[0] = con_sub(p[i]);
-		pp[1] = con_sub(p[i + 1]);
-		pp[2] = con_sub(p[i + 2]);
-		pp[3] = con_sub(p[i + 3]);
-		pp[4] = con_sub(p[i + 4]);
-		pp[5] = con_sub(p[i + 5]);
-		pp[6] = con_sub(p[i + 6]);
-		pp[7] = con_sub(p[i + 7]);
+		u = _mm256_loadu_si256((__m256i *)(p + i));
+		t = _mm256_sub_epi64(u, V_Q_Q_Q_Q);
+		t = _mm256_srli_epi64(t, 63);
+		t = _mm256_xor_si256(t, V_1_1_1_1);
+		t = _mm256_mul_epu32(t, V_Q_Q_Q_Q);
+		t = _mm256_sub_epi64(u, t);
+		_mm256_storeu_si256((__m256i *)pp, t);
+
+		u = _mm256_loadu_si256((__m256i *)(p + i + 4));
+		t = _mm256_sub_epi64(u, V_Q_Q_Q_Q);
+		t = _mm256_srli_epi64(t, 63);
+		t = _mm256_xor_si256(t, V_1_1_1_1);
+		t = _mm256_mul_epu32(t, V_Q_Q_Q_Q);
+		t = _mm256_sub_epi64(u, t);
+		_mm256_storeu_si256((__m256i *)(pp + 4), t);
 		
 		bb = b + (i / 8) * Q_BITS;
 		bb[0] = pp[0];
