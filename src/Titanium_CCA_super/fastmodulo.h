@@ -2,7 +2,7 @@
  * Titanium_CCA_super             *
  * Implemented by Raymond K. ZHAO *
  *                                *
- * Montgomery/Barrett reduction   *
+ * Modulo reduction               *
  * ****************************** */
  
 #ifndef FASTMODULO_H
@@ -19,9 +19,8 @@
  * t = ((x % R)*b) % R
  * m = (x + t * Q) / R */
 
-#define MONTGOMERY_FACTOR 5392383
-#define MONTGOMERY_SHIFT 23
-#define MONTGOMERY_MASK ((1 << MONTGOMERY_SHIFT) - 1)
+#define MONTGOMERY_FACTOR 3419555839
+#define MONTGOMERY_SHIFT 32
 
 /* Barrett reduction
  * Input: x < 2^k
@@ -31,21 +30,23 @@
  * t = floor((x * b) / 2^k), where t is an estimation of x / Q
  * m = x - t * Q */
 
-#define BARRETT_BITSHIFT_4Q 23 
-#define BARRETT_FACTOR_4Q ((1 << BARRETT_BITSHIFT_4Q) / Q) 
-#define BARRETT_BITSHIFT_8Q 24 
-#define BARRETT_FACTOR_8Q ((1 << BARRETT_BITSHIFT_8Q) / Q) 
-#define BARRETT_BITSHIFT_16Q 25 
-#define BARRETT_FACTOR_16Q ((1 << BARRETT_BITSHIFT_16Q) / Q) 
-#define BARRETT_BITSHIFT_32Q 26 
-#define BARRETT_FACTOR_32Q ((1 << BARRETT_BITSHIFT_32Q) / Q) 
+#define BARRETT_BITSHIFT_SHORT 32
+#define BARRETT_FACTOR_SHORT 3584
+
+#define BARRETT_BITSHIFT_2Q2 42
+#define BARRETT_FACTOR_2Q2 3670909
 
 #define BARRETT_BITSHIFT_ZQ (ZQ_BYTES * 8) 
-#define BARRETT_FACTOR_ZQ ((1 << BARRETT_BITSHIFT_ZQ) / Q) 
+#define BARRETT_FACTOR_ZQ 14
 
-inline uint32_t barrett_zq(uint32_t t)
+inline uint32_t barrett_short(uint64_t t)
 {
-	return t - (((t * BARRETT_FACTOR_ZQ) >> BARRETT_BITSHIFT_ZQ) * Q);
+	return t - (((t * BARRETT_FACTOR_SHORT) >> BARRETT_BITSHIFT_SHORT) * Q);
+}
+
+inline uint32_t barrett_2q2(uint64_t t)
+{
+	return t - (((t * BARRETT_FACTOR_2Q2) >> BARRETT_BITSHIFT_2Q2) * Q);
 }
 
 #endif
