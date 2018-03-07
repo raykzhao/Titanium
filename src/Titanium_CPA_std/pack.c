@@ -14,6 +14,11 @@
 static const __m256i V_Q_Q_Q_Q = {Q, Q, Q, Q};
 static const __m256i V_1_1_1_1 = {1, 1, 1, 1};
 
+static inline uint32_t con_sub(uint32_t x) /* conditional subtraction of q */
+{
+	return x - (1 ^ ((x - Q) >> 31)) * Q;
+}
+
 /* convert a polynomial to a binary string */
 void poly_encode(unsigned char *b, const uint64_t *p, uint32_t len)
 {
