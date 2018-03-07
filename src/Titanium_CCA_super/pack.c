@@ -98,11 +98,24 @@ void poly_decode(uint64_t *p, const unsigned char *b, uint32_t len)
 void poly_encode_c2(unsigned char *b, const uint64_t *p, uint32_t len)
 {
 	uint32_t i;
-
-	for (i = 0; i < len; i++)
+	uint64_t pp[4];
+	__m256i u, t;
+	
+	for (i = 0; i < len; i += 4)
 	{
-		/* each coordinate will become 2 bytes after compression */
-		STORE_C2(b + i * C2_COMPRESSION_BYTE, (con_sub(p[i])) >> C2_COMPRESSION_BITS);
+		u = _mm256_loadu_si256((__m256i *)(p + i));
+		t = _mm256_sub_epi64(u, V_Q_Q_Q_Q);
+		t = _mm256_srli_epi64(t, 63);
+		t = _mm256_xor_si256(t, V_1_1_1_1);
+		t = _mm256_mul_epu32(t, V_Q_Q_Q_Q);
+		t = _mm256_sub_epi64(u, t);
+		t = _mm256_srli_epi64(t, C2_COMPRESSION_BITS);
+		_mm256_storeu_si256((__m256i *)pp, t);
+		
+		STORE_C2(b + i * C2_COMPRESSION_BYTE, pp[0]);
+		STORE_C2(b + (i + 1) * C2_COMPRESSION_BYTE, pp[1]);
+		STORE_C2(b + (i + 2) * C2_COMPRESSION_BYTE, pp[2]);
+		STORE_C2(b + (i + 3) * C2_COMPRESSION_BYTE, pp[3]);
 	}
 }
 
@@ -110,11 +123,13 @@ void poly_encode_c2(unsigned char *b, const uint64_t *p, uint32_t len)
 void poly_decode_c2(uint64_t *p, const unsigned char *b, uint32_t len)
 {
 	uint32_t i;
+	__m256i t;
 	
-	for (i = 0; i < len; i++)
+	for (i = 0; i < len; i += 4)
 	{
-		/* shift the compressed coordinates back */
-		p[i] = ((uint64_t)(LOAD_C2(b + i * C2_COMPRESSION_BYTE))) << C2_COMPRESSION_BITS;
+		t = _mm256_set_epi64x(LOAD_C2(b + (i + 3) * C2_COMPRESSION_BYTE), LOAD_C2(b + (i + 2) * C2_COMPRESSION_BYTE), LOAD_C2(b + (i + 1) * C2_COMPRESSION_BYTE), LOAD_C2(b + i * C2_COMPRESSION_BYTE));
+		t = _mm256_slli_epi64(t, C2_COMPRESSION_BITS);
+		_mm256_storeu_si256((__m256i *)(p + i), t);
 	}
 }
 
