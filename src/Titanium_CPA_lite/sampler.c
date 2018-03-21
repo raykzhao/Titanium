@@ -55,7 +55,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 			y = _mm256_and_si256(y, V_B_1_BITMASK);
 			y = _mm256_add_epi64(y, V_1_1_1_1);
 			
-			_mm256_storeu_si256((__m256i *)(sample[t] + i), y);
+			_mm256_store_si256((__m256i *)(sample[t] + i), y);
 		}
 	}
 	
@@ -67,7 +67,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 		y = _mm256_and_si256(y, V_B_1_BITMASK);
 		y = _mm256_add_epi64(y, V_1_1_1_1);
 			
-		_mm256_storeu_si256((__m256i *)(sample[B1_T] + i), y);
+		_mm256_store_si256((__m256i *)(sample[B1_T] + i), y);
 	}
 	
 	/* sample the remaining part of B_2 for r_t */
@@ -77,7 +77,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 		y = _mm256_and_si256(y, V_B_2_BITMASK);
 		y = _mm256_add_epi64(y, V_1_1_1_1);
 			
-		_mm256_storeu_si256((__m256i *)(sample[B1_T] + i), y);
+		_mm256_store_si256((__m256i *)(sample[B1_T] + i), y);
 	}
 	
 	/* sample those r_i full of B_2 */
@@ -90,7 +90,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 			y = _mm256_and_si256(y, V_B_2_BITMASK);
 			y = _mm256_add_epi64(y, V_1_1_1_1);
 			
-			_mm256_storeu_si256((__m256i *)(sample[t] + i), y);
+			_mm256_store_si256((__m256i *)(sample[t] + i), y);
 		}
 	}
 
@@ -108,20 +108,20 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 			z = _mm256_sub_epi64(V_0_0_0_0, z);
 			z = _mm256_and_si256(z, V_fe_fe_fe_fe);
 			z = _mm256_xor_si256(z, V_1_1_1_1);
-			y = _mm256_loadu_si256((__m256i *)(sample[t] + i));
+			y = _mm256_load_si256((__m256i *)(sample[t] + i));
 			y = _mm256_mul_epi32(y, z);
 			y = _mm256_add_epi64(V_Q_Q_Q_Q, y);
-			_mm256_storeu_si256((__m256i *)(sample[t] + i), y);
+			_mm256_store_si256((__m256i *)(sample[t] + i), y);
 			
 			x = _mm256_srli_epi64(x, 4);
 			z = _mm256_and_si256(x, V_1_1_1_1);
 			z = _mm256_sub_epi64(V_0_0_0_0, z);
 			z = _mm256_and_si256(z, V_fe_fe_fe_fe);
 			z = _mm256_xor_si256(z, V_1_1_1_1);
-			y = _mm256_loadu_si256((__m256i *)(sample[t] + i + 4));
+			y = _mm256_load_si256((__m256i *)(sample[t] + i + 4));
 			y = _mm256_mul_epi32(y, z);
 			y = _mm256_add_epi64(V_Q_Q_Q_Q, y);
-			_mm256_storeu_si256((__m256i *)(sample[t] + i + 4), y);
+			_mm256_store_si256((__m256i *)(sample[t] + i + 4), y);
 		}	
 	}
 }
@@ -198,7 +198,7 @@ void sampler_binomial(uint64_t sample[T][D + K1 + 1])
 			s = _mm256_add_epi64(V_Q_Q_Q_Q, s1);
 			s = _mm256_sub_epi64(s, s2);
 			
-			_mm256_storeu_si256((__m256i *)(sample[t] + i), s);
+			_mm256_store_si256((__m256i *)(sample[t] + i), s);
 		}
 	}
 }
