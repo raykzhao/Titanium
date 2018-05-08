@@ -28,7 +28,7 @@ void sampler_zb(uint32_t sample[T][DIM_2])
 {
 	unsigned char r[B_BYTE * T * (K + 1) + T * (K + 1) / 8];
 	uint32_t i;
-	char sign[8];
+	int8_t sign[8];
 	uint8_t x;
 	uint32_t t;
 	uint32_t y;
