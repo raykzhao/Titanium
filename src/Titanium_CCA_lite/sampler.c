@@ -25,7 +25,6 @@
 static const __m256i V_B_1_BITMASK = {B_1_BITMASK, B_1_BITMASK, B_1_BITMASK, B_1_BITMASK};
 static const __m256i V_B_2_BITMASK = {B_2_BITMASK, B_2_BITMASK, B_2_BITMASK, B_2_BITMASK};
 static const __m256i V_1_1_1_1 = {1, 1, 1, 1};
-static const __m256i V_0_0_0_0 = {0, 0, 0, 0};
 static const __m256i V_fe_fe_fe_fe = {0xfffffffffffffffeLL, 0xfffffffffffffffeLL, 0xfffffffffffffffeLL, 0xfffffffffffffffeLL};
 static const __m256i V_Q_Q_Q_Q = {Q, Q, Q, Q};
 static const __m256i V_B_ADDMASK = {BINOMIAL_ADDMASK, BINOMIAL_ADDMASK, BINOMIAL_ADDMASK, BINOMIAL_ADDMASK};
@@ -105,7 +104,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 			x = _mm256_set1_epi64x(rr[i / 8]);
 			x = _mm256_srlv_epi64(x, V_0_1_2_3);
 			z = _mm256_and_si256(x, V_1_1_1_1);
-			z = _mm256_sub_epi64(V_0_0_0_0, z);
+			z = _mm256_sub_epi64(_mm256_setzero_si256(), z);
 			z = _mm256_and_si256(z, V_fe_fe_fe_fe);
 			z = _mm256_xor_si256(z, V_1_1_1_1);
 			y = _mm256_load_si256((__m256i *)(sample[t] + i));
@@ -115,7 +114,7 @@ void sampler_zb(uint64_t sample[T][DIM_2])
 			
 			x = _mm256_srli_epi64(x, 4);
 			z = _mm256_and_si256(x, V_1_1_1_1);
-			z = _mm256_sub_epi64(V_0_0_0_0, z);
+			z = _mm256_sub_epi64(_mm256_setzero_si256(), z);
 			z = _mm256_and_si256(z, V_fe_fe_fe_fe);
 			z = _mm256_xor_si256(z, V_1_1_1_1);
 			y = _mm256_load_si256((__m256i *)(sample[t] + i + 4));
@@ -185,7 +184,7 @@ void sampler_binomial(uint64_t sample[T][D + K1 + 1])
 		{
 			x = _mm256_set_epi64x(LOAD_BINOMIAL(rr + (i + 3) * BINOMIAL_BYTE), LOAD_BINOMIAL(rr + (i + 2) * BINOMIAL_BYTE), LOAD_BINOMIAL(rr + (i + 1) * BINOMIAL_BYTE), LOAD_BINOMIAL(rr + i * BINOMIAL_BYTE));
 		
-			s = V_0_0_0_0;
+			s = _mm256_setzero_si256();
 			for (j = 0; j < BINOMIAL_K; j++)
 			{
 				xx = _mm256_srli_epi64(x, j);
