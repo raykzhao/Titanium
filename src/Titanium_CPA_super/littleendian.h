@@ -27,7 +27,7 @@ inline uint16_t load_16(const unsigned char *x)
 
 inline uint32_t load_24(const unsigned char *x)
 {
-	return ((uint32_t)(*x)) | (((uint32_t)(*(x + 1))) << 8) | (((uint32_t)(*(x + 2))) << 16);
+	return ((uint32_t)(*x)) | (((uint32_t)(*((uint16_t *)(x + 1)))) << 8);
 }
 
 inline uint32_t load_32(const unsigned char *x)
