@@ -6,7 +6,7 @@ PROGRAM=titanium
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJS)
-	$(CC) $(OBJS) -o $(PROGRAM) -lkeccak -lcrypto
+	$(CC) $(OBJS) -o $(PROGRAM) -lkeccak -lcrypto -L/usr/local/lib
 
 clean:;
 	rm -f *.o $(PROGRAM)
