@@ -1,3 +1,5 @@
 # Titanium
 
-This is the new AVX2 implementation of the AES-256 PRNG variant of [Titanium](http://users.monash.edu.au/~rste/Titanium.html) cryptosystem.
+This is the new AVX2 implementation of the AES-256 PRNG variant of [Titanium](http://users.monash.edu.au/~rste/Titanium.html) cryptosystem and the implementation for the following paper:
+
+Practical MP-LWE-based encryption balancing security-risk versus efficiency. (2019). Ron Steinfeld, Amin Sakzad, & Raymond K. Zhao. Designs, Codes and Cryptography. DOI [10.1007/s10623-019-00654-5](https://doi.org/10.1007/s10623-019-00654-5).
