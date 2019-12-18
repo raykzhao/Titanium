@@ -52,7 +52,7 @@ int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk, const unsigned 
 		/* a_i <-- a_i mp_{d+k} s */
 		for (j = 0; j < N + D + K + 1; j++)
 		{
-			a[i][j] = barrett_4q2((uint64_t)a[i][j] * (uint64_t)s[j]);
+			a[i][j] = barrett((uint64_t)a[i][j] * (uint64_t)s[j], BARRETT_FACTOR_4Q2, BARRETT_BITSHIFT_4Q2);
 		}
 		
 		INTT_NDK_DK(a[i]);
@@ -137,7 +137,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	{
 		for (j = 0; j < N + K + 1; j++)
 		{
-			c1[j] = barrett_4q2((uint64_t)c1[j] + (uint64_t)r[i][j] * (uint64_t)a[i][j]);
+			c1[j] = barrett((uint64_t)c1[j] + (uint64_t)r[i][j] * (uint64_t)a[i][j], BARRETT_FACTOR_4Q2, BARRETT_BITSHIFT_4Q2);
 		}
 	}
 	
@@ -147,7 +147,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	{
 		for (j = 0; j < D + K + 1; j++)
 		{
-			c2[j] = barrett_4q2((uint64_t)c2[j] + (uint64_t)r2[i][j] * (uint64_t)b[i][j]);
+			c2[j] = barrett((uint64_t)c2[j] + (uint64_t)r2[i][j] * (uint64_t)b[i][j], BARRETT_FACTOR_4Q2, BARRETT_BITSHIFT_4Q2);
 		}
 	}
 	
@@ -155,7 +155,7 @@ int crypto_encrypt(unsigned char *c, unsigned long long *clen, const unsigned ch
 	
 	for (i = 0; i < D; i++)
 	{
-		c2[i] = barrett_short(c2[i] + mu[i]);
+		c2[i] = barrett(c2[i] + mu[i], BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 	}
 	
 	/* encode c <-- (c1,c2) */
@@ -191,7 +191,7 @@ int crypto_encrypt_open(unsigned char *m, unsigned long long *mlen, const unsign
 	
 	for (i = 0; i < N + D + K + 1; i++)
 	{
-		c1[i] = barrett_4q2((uint64_t)c1[i] * (uint64_t)s[i]);
+		c1[i] = barrett((uint64_t)c1[i] * (uint64_t)s[i], BARRETT_FACTOR_4Q2, BARRETT_BITSHIFT_4Q2);
 	}
 	
 	INTT_NDK_D(c1);
