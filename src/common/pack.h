@@ -1,5 +1,5 @@
 /* ****************************** *
- * Titanium_CCA_hi                *
+ * Titanium                       *
  * Implemented by Raymond K. ZHAO *
  *                                *
  * Packing/Unpacking              *

@@ -1,5 +1,5 @@
 /* ****************************** *
- * Titanium_CPA                   *
+ * Titanium                       *
  * Implemented by Raymond K. ZHAO *
  *                                *
  * Little endian functions        *
