@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O3 -march=native -Wall
+CFLAGS=-O3 -march=native -Wall -flto
 OBJS=PQCgenKAT_kem.o encrypt.o fastrandombytes.o kem.o ntt.o pack.o rng.o sampler.o
 PROGRAM=titanium
 
