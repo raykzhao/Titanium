@@ -261,10 +261,10 @@ static void ntt_2(uint32_t *a, uint32_t n, const uint32_t *omega)
 		y = a[j + 3];
 		t = montgomery((q_level + v - y) * omega[num_of_problems]);
 		
-		a[j] = barrett_short(u + v + x + y);
-		a[j + 1] = barrett_short(q_level1 + u + x - v - y);
-		a[j + 2] = barrett_short(q_level + u + t - x);
-		a[j + 3] = barrett_short(q_level1 + u - x - t);
+		a[j] = barrett(u + v + x + y, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
+		a[j + 1] = barrett(q_level1 + u + x - v - y, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
+		a[j + 2] = barrett(q_level + u + t - x, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
+		a[j + 3] = barrett(q_level1 + u - x - t, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 	}
 }
 
@@ -345,7 +345,7 @@ static void ntt_butterfly_768_1280(uint32_t *a, uint32_t n2)
 	c = a[N2_1280 + n2];
 	d = a[N2_1280 * 2 + n2];
 	
-	a[n2] = barrett_short(b + c + d);
+	a[n2] = barrett(b + c + d, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 	a[N2_1280 + n2] = b + montgomery(c * w_5[0][0] + d * w_5[0][1]);
 	a[N2_1280 * 2 + n2] = b + montgomery(c * w_5[1][0] + d * w_5[1][1]);
 	a[N2_1280 * 3 + n2] = b + montgomery(c * w_5[2][0] + d * w_5[2][1]);
@@ -363,7 +363,7 @@ static void ntt_butterfly_1280_512(uint32_t *a, uint32_t n2)
 	e = a[N2_1280 * 3 + n2];
 	f = a[N2_1280 * 4 + n2];
 	
-	a[n2] = barrett_short(b + c + d + e + f);
+	a[n2] = barrett(b + c + d + e + f, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 	a[N2_1280 + n2] = b + montgomery(c * w_5[0][0] + d * w_5[0][1] + e * w_5[0][2] + f * w_5[0][3]);
 }
 
@@ -384,7 +384,7 @@ static void ntt_butterfly_768_1024(uint32_t *a, uint32_t n2)
 	c = a[N2_1024 + n2];
 	d = a[N2_1024 * 2 + n2];
 	
-	a[n2] = barrett_short(b + c + d);
+	a[n2] = barrett(b + c + d, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 	a[N2_1024 + n2] = b + montgomery(c * w_4[0][0] + d * w_4[0][1]);
 	a[N2_1024 * 2 + n2] = b + montgomery(c * w_4[1][0] + d * w_4[1][1]);
 	a[N2_1024 * 3 + n2] = b + montgomery(c * w_4[2][0] + d * w_4[2][1]);
@@ -400,7 +400,7 @@ static void ntt_butterfly_1024_1024_inv(uint32_t *a, uint32_t n2)
 	d = a[N2_1024 * 2 + n2];
 	e = a[N2_1024 * 3 + n2];
 	
-	a[n2] = barrett_short(b + c + d + e);
+	a[n2] = barrett(b + c + d + e, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 	a[N2_1024 + n2] = b + montgomery(c * w_4_inv[0][0] + d * w_4_inv[0][1] + e * w_4_inv[0][2]);
 	a[N2_1024 * 2 + n2] = b + montgomery(c * w_4_inv[1][0] + d * w_4_inv[1][1] + e * w_4_inv[1][2]);
 	a[N2_1024 * 3 + n2] = b + montgomery(c * w_4_inv[2][0] + d * w_4_inv[2][1] + e * w_4_inv[2][2]);
@@ -414,14 +414,14 @@ static void ntt_butterfly_512_512_inv(uint32_t *a, uint32_t n2)
 	b = a[n2];
 	c = a[N2_512 + n2];
 
-	a[n2] = barrett_short(b + c);
-	a[N2_512 + n2] = barrett_short(Q2 + b - c);
+	a[n2] = barrett(b + c, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
+	a[N2_512 + n2] = barrett(Q2 + b - c, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 }
 
 /* 256 * 2 --> 256 * 1 */
 static void ntt_butterfly_512_256(uint32_t *a, uint32_t n2)
 {
-	a[n2] = barrett_short(a[n2] + a[N2_512 + n2]);
+	a[n2] = barrett(a[n2] + a[N2_512 + n2], BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 }
 
 /* 256 * 4 --> 256 * 5 */
@@ -434,7 +434,7 @@ static void ntt_butterfly_1024_1280(uint32_t *a, uint32_t n2)
 	d = a[N2_1280 * 2 + n2];
 	e = a[N2_1280 * 3 + n2];
 	
-	a[n2] = barrett_short(b + c + d + e);
+	a[n2] = barrett(b + c + d + e, BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);
 	a[N2_1280 + n2] = b + montgomery(c * w_5[0][0] + d * w_5[0][1] + e * w_5[0][2]);
 	a[N2_1280 * 2 + n2] = b + montgomery(c * w_5[1][0] + d * w_5[1][1] + e * w_5[1][2]);
 	a[N2_1280 * 3 + n2] = b + montgomery(c * w_5[2][0] + d * w_5[2][1] + e * w_5[2][2]);
@@ -444,7 +444,7 @@ static void ntt_butterfly_1024_1280(uint32_t *a, uint32_t n2)
 /* 256 * 5 --> 256 * 1 */
 static void ntt_butterfly_1280_256(uint32_t *a, uint32_t n2)
 {
-	a[n2] = barrett_short(a[n2] + a[N2_1280 + n2] + a[N2_1280 * 2 + n2] + a[N2_1280 * 3 + n2] + a[N2_1280 * 4 + n2]);	
+	a[n2] = barrett(a[n2] + a[N2_1280 + n2] + a[N2_1280 * 2 + n2] + a[N2_1280 * 3 + n2] + a[N2_1280 * 4 + n2], BARRETT_FACTOR_SHORT, BARRETT_BITSHIFT_SHORT);	
 }
 
 void ntt_768_1280(uint32_t *a)
